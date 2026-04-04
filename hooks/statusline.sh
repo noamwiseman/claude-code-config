@@ -66,7 +66,18 @@ make_bar() {
     echo "$bar"
 }
 
-BAR_WIDTH=16
+# ---------------------------------------------------------------------------
+# Detect terminal width and scale bar width accordingly
+# Fixed visible chars on line 2 (labels, %, separators, reset timer): ~47
+# Three bars share the remaining space.
+# ---------------------------------------------------------------------------
+TERM_COLS=$(stty size </dev/tty 2>/dev/null | awk '{print $2}')
+[[ -z "$TERM_COLS" ]] && TERM_COLS=$(tput cols 2>/dev/null)
+[[ -z "$TERM_COLS" ]] && TERM_COLS="${COLUMNS:-80}"
+BAR_WIDTH=$(( (TERM_COLS - 47) / 3 ))
+[[ $BAR_WIDTH -lt 4  ]] && BAR_WIDTH=4
+[[ $BAR_WIDTH -gt 20 ]] && BAR_WIDTH=20
+
 CTX_BAR=$(make_bar "$CTX_USED" "$BAR_WIDTH")
 BAR_5H=$(  make_bar "$PCT_5H"  "$BAR_WIDTH")
 BAR_7D=$(  make_bar "$PCT_7D"  "$BAR_WIDTH")
